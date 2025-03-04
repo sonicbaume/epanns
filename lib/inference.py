@@ -97,7 +97,7 @@ class PredictionTracker:
         tracked_probs = model_probs[self.idxs]
         top_idxs = np.argpartition(tracked_probs, -top_k)[-top_k:]
         top_probs = tracked_probs[top_idxs]
-        top_probs = getattr(top_probs, "tolist", lambda: top_probs)()
+        top_probs = [ round(elem, 4) for elem in top_probs.tolist() ]
         top_labels = [self.labels[idx] for idx in top_idxs]
         result = list(zip(top_labels, top_probs))
         if sorted_by_p:

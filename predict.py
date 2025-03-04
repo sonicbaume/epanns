@@ -93,4 +93,4 @@ def predict(
   tracker = PredictionTracker(audioset_labels)
   dl_inference = inference(audio, device)
   top_preds = tracker(dl_inference, top_k)
-  print(json.dumps(top_preds))
+  print(json.dumps(top_preds, indent=2))
