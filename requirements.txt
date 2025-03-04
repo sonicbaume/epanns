@@ -1,5 +1,3 @@
 librosa
 torch
 torchlibrosa
-omegaconf
-pyaudio

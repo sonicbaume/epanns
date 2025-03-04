@@ -1,37 +1,11 @@
 #!/usr/bin python
 # -*- coding:utf-8 -*-
 
-
-"""
-Code from:
-https://github.com/qiuqiangkong/audioset_tagging_cnn
-https://github.com/yinkalario/General-Purpose-Sound-Recognition-Demo
-"""
-
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 from torchlibrosa.augmentation import SpecAugmentation
-from collections import OrderedDict
-# import os
-# os.chdir('/home/arshdeep/PANNs_code/audioset_tagging_cnn-master/pytorch')
-#from pytorch_utils import do_mixup, interpolate, pad_framewise_output
-# import torch, torchvision
-from torch.utils.data import Dataset
-# from torchvision import datasets
-#from torchvision.transforms import ToTensor
-import os
-import numpy as np
-
-
-# ##############################################################################
-# # HELPERS
-# ##############################################################################
 
 def init_layer(layer):
     """Initialize a Linear or Convolutional layer. """
@@ -41,16 +15,13 @@ def init_layer(layer):
         if layer.bias is not None:
             layer.bias.data.fill_(0.)
 
-
 def init_bn(bn):
     """Initialize a Batchnorm layer. """
     bn.bias.data.fill_(0.)
     bn.weight.data.fill_(1.)
 
-
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
-
         super().__init__()
 
         self.conv1 = nn.Conv2d(in_channels=in_channels,
@@ -74,9 +45,7 @@ class ConvBlock(nn.Module):
         init_bn(self.bn1)
         init_bn(self.bn2)
 
-
     def forward(self, input, pool_size=(2, 2), pool_type='avg'):
-
         x = input
         x = F.relu_(self.bn1(self.conv1(x)))
         x = F.relu_(self.bn2(self.conv2(x)))
@@ -92,56 +61,6 @@ class ConvBlock(nn.Module):
             raise Exception('Incorrect argument!')
 
         return x
-
-
-# ##############################################################################
-# # CNN 9
-# ##############################################################################
-class Cnn9_GMP_64x64(nn.Module):
-    """
-    """
-
-    EXPECTED_NUM_CLASSES = 527  # Model was trained with AudioSet classes
-
-    def __init__(self, classes_num, strong_target_training=False):
-        """
-        """
-        super().__init__()
-        assert classes_num == self.EXPECTED_NUM_CLASSES, \
-            f"Expected 527 AudioSet classes and got {classes_num}!"
-        self.conv_block1 = ConvBlock(in_channels=1, out_channels=64)
-        self.conv_block2 = ConvBlock(in_channels=64, out_channels=128)
-        self.conv_block3 = ConvBlock(in_channels=128, out_channels=256)
-        self.conv_block4 = ConvBlock(in_channels=256, out_channels=512)
-        self.fc_audioset = nn.Linear(512, classes_num, bias=True)
-        self.init_weights()
-
-
-
-    def init_weights(self):
-        """
-        """
-        init_layer(self.fc_audioset)
-
-    def get_bottleneck(self, x):
-        """
-        """
-        x = x[:, None, :, :]  # (batch, 1, time, freqbins)
-        x = self.conv_block1(x, pool_size=(2, 2), pool_type="avg")
-        x = self.conv_block2(x, pool_size=(2, 2), pool_type="avg")
-        x = self.conv_block3(x, pool_size=(2, 2), pool_type="avg")
-        x = self.conv_block4(x, pool_size=(1, 1), pool_type="avg")
-        return x
-
-    def forward(self, x):
-        """
-        Input: (batch_size, times_steps, freq_bins)
-        """
-        x = self.get_bottleneck(x)
-        x = torch.mean(x, dim=3)
-        (x, _) = torch.max(x, dim=2)
-        output = torch.sigmoid(self.fc_audioset(x))
-        return output
 
 #%% Cnn14_pruned
 

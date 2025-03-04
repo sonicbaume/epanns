@@ -1,22 +1,12 @@
 #!/usr/bin python
 # -*- coding:utf-8 -*-
 
-
-"""
-"""
-
-
 import numpy as np
 import librosa
 import torch
 from .utils import move_data_to_device
 
-# ##############################################################################
-# # AUDIO MODEL INFERENCE
-# ##############################################################################
 class AudioModelInference:
-    """
-    """
     LOGMEL_MEANS = np.float32([
         -14.050895 , -13.107869 , -13.1390915, -13.255364 , -13.917199 ,
         -14.087848 , -14.855916 , -15.266642 , -15.884036 , -16.491768 ,
@@ -46,15 +36,13 @@ class AudioModelInference:
 
     def __init__(self, model, winsize=1024, stft_hopsize=512, samplerate=32000,
                  stft_window="hahn", n_mels=64, mel_fmin=50, mel_fmax=14000):
-        """
-        """
         self.model = model
         self.model.eval()
-        #
+        
         self.winsize = winsize
         self.stft_hopsize = stft_hopsize
         self.stft_window = stft_window
-        #
+        
         self.mel_filt = librosa.filters.mel(sr=samplerate,
                                             n_fft=winsize,
                                             n_mels=n_mels,
@@ -62,8 +50,6 @@ class AudioModelInference:
                                             fmax=mel_fmax)
 
     def wav_to_logmel(self, wav_arr):
-        """
-        """
         stft_spec = np.abs(librosa.stft(y=wav_arr,
                                         n_fft=self.winsize,
                                         hop_length=self.stft_hopsize,
@@ -79,27 +65,16 @@ class AudioModelInference:
         return logmel_spec  # (t, nbins)
 
     def __call__(self, wav_arr, top_k=None):
-        """
-        """
         audio = wav_arr[None,:]
         audio = move_data_to_device(audio,device = 'cpu')
-        #print(np.shape(audio))
         logmel_spec = self.wav_to_logmel(wav_arr)
         with torch.no_grad():
             logmel_spec = torch.from_numpy(
                 logmel_spec.astype(np.float32)).unsqueeze(0)
             preds = self.model(audio,None).to("cpu").numpy().squeeze(axis=0)
-            #print(np.shape(preds))
         return preds  # shape: (num_classes,)
 
-
-# ##############################################################################
-# # PREDICTION TRACKER
-# ##############################################################################
 class PredictionTracker:
-    """
-    """
-
     def __init__(self, all_labels, allow_list=None, deny_list=None):
         """
         :param all_labels: List with all categories as returned by the model.
@@ -118,8 +93,6 @@ class PredictionTracker:
         self.idxs = sorted(self.lbls_to_idxs.values())
 
     def __call__(self, model_probs, top_k=6, sorted_by_p=True):
-        """
-        """
         assert top_k >= 1, "Only integer >= 1 allowed for top_k!"
         top_k += 1
         #
