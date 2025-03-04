@@ -94,11 +94,10 @@ class PredictionTracker:
 
     def __call__(self, model_probs, top_k=6, sorted_by_p=True):
         assert top_k >= 1, "Only integer >= 1 allowed for top_k!"
-        top_k += 1
-        #
         tracked_probs = model_probs[self.idxs]
         top_idxs = np.argpartition(tracked_probs, -top_k)[-top_k:]
         top_probs = tracked_probs[top_idxs]
+        top_probs = getattr(top_probs, "tolist", lambda: top_probs)()
         top_labels = [self.labels[idx] for idx in top_idxs]
         result = list(zip(top_labels, top_probs))
         if sorted_by_p:
