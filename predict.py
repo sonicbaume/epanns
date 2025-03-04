@@ -4,6 +4,8 @@
 import os
 import sys
 import json
+
+import requests
 from .lib.utils import load_csv_labels
 from .lib.models import Cnn14_pruned
 from .lib.inference import AudioModelInference, PredictionTracker
@@ -21,12 +23,32 @@ n_mels = 64
 mel_fmin = 50
 mel_fmax = 14000
 
+checkpoint_url = "https://zenodo.org/records/7939403/files/checkpoint_closeto_.44.pt?download=1"
+
 default_labels_path = os.path.join(os.path.dirname(__file__), "config", "audioset_labels.csv")
 default_top_k = 10
 default_checkpoint_path = os.path.join(os.path.dirname(__file__), "models", "checkpoint_closeto_.44.pt")
 
+def download_checkpoint():
+  try:
+    response = requests.get(checkpoint_url, stream=True)
+    response.raise_for_status()
+    with open(default_checkpoint_path, 'wb') as file:
+      for chunk in response.iter_content(chunk_size=8192):
+          if chunk:
+            file.write(chunk)
+  except requests.exceptions.RequestException as e:
+      sys.exit(f"Error downloading from {checkpoint_url}")
+  except IOError as e:
+      sys.exit(f"Error writing file {default_checkpoint_path}")
+
 def check_path(value: str):
     if not os.path.isfile(value):
+      raise BadParameter("File does not exist")
+    return value
+
+def check_checkpoint_path(value: str):
+    if value != default_checkpoint_path and not os.path.isfile(value):
       raise BadParameter("File does not exist")
     return value
 
@@ -38,9 +60,12 @@ def check_top_k(value: int):
 def predict(
     audio_path: Annotated[str, Argument(help="Path to the audio file", callback=check_path)] = "",
     top_k: Annotated[int, Option(help="Number of classes to return", callback=check_top_k)] = default_top_k,
-    checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_path)] = default_checkpoint_path,
+    checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
     audioset_labels_path: Annotated[str, Option(help="Path of labels", callback=check_path)] = default_labels_path
 ):
+  if checkpoint_path == default_checkpoint_path and not os.path.isfile(checkpoint_path):
+    print(f"Downloading model to {default_checkpoint_path}", file=sys.stderr)
+    download_checkpoint()
 
   print(f"Loading labels from {audioset_labels_path}", file=sys.stderr)
   _, _, audioset_labels = load_csv_labels(audioset_labels_path)
