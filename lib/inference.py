@@ -64,14 +64,14 @@ class AudioModelInference:
         #
         return logmel_spec  # (t, nbins)
 
-    def __call__(self, wav_arr, top_k=None):
+    def __call__(self, wav_arr, top_k=None, device='cpu'):
         audio = wav_arr[None,:]
-        audio = move_data_to_device(audio,device = 'cpu')
+        audio = move_data_to_device(audio, device)
         logmel_spec = self.wav_to_logmel(wav_arr)
         with torch.no_grad():
             logmel_spec = torch.from_numpy(
                 logmel_spec.astype(np.float32)).unsqueeze(0)
-            preds = self.model(audio,None).to("cpu").numpy().squeeze(axis=0)
+            preds = self.model(audio,None).to('cpu').numpy().squeeze(axis=0)
         return preds  # shape: (num_classes,)
 
 class PredictionTracker:

@@ -7,6 +7,7 @@ from lib.utils import load_csv_labels
 from lib.models import Cnn14_pruned
 from lib.inference import AudioModelInference, PredictionTracker
 from torch import load as loadModel
+from torch.cuda import is_available as hasCUDA
 from librosa.core import load as loadAudio
 import os
 
@@ -48,7 +49,8 @@ inference = AudioModelInference(
 tracker = PredictionTracker(audioset_labels)
 
 (audio, _) = loadAudio(audio_path, sr=samplerate, mono=True)
-dl_inference = inference(audio)
+device = "cuda" if hasCUDA() else "cpu"
+dl_inference = inference(audio, device)
 print(f"Inference complete", file=sys.stderr)
 
 top_preds = tracker(dl_inference, top_k)
