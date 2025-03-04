@@ -1,11 +1,11 @@
 # epanns
 
-`epanns` is a command-line tool for categorising sound within an audio file. It is uses the [E-PANNs](https://github.com/Arshdeep-Singh-Boparai/E-PANNs) lightweight pre-trained model developed by Arshdeep Singh at the University of Surrey.
+`epanns` is a command-line tool for categorising sound within an audio file. It is uses the [E-PANNs](https://github.com/Arshdeep-Singh-Boparai/E-PANNs) lightweight pre-trained model developed by Arshdeep Singh at the University of Surrey. Sounds are categorised using the [Google AudioSet ontology](https://research.google.com/audioset/ontology/index.html).
 
 ## Installation
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install:
+Use [pipx](https://pipx.pypa.io/stable/) to install:
 ```
-pip install epanns
+pipx install epanns
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ will return the predicted categories and their probability as JSON
 
 To see the available options, run `epanns --help`
 
-If you do not provide a checkpoint path, the [model checkpoint](https://zenodo.org/records/7939403) will be downloaded on the first run.
+If you do not provide a checkpoint path, the [model checkpoint](https://zenodo.org/records/7939403) will be downloaded on the first run and cached for future runs.
 
 
 ## Acknowledgements

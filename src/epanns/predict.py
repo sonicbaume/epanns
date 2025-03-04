@@ -14,6 +14,7 @@ from torch.cuda import is_available as hasCUDA
 from librosa.core import load as loadAudio
 from typer import Argument, Option, BadParameter
 from typing_extensions import Annotated
+from platformdirs import user_cache_dir
 
 samplerate = 32000
 model_winsize = 1024
@@ -27,10 +28,12 @@ checkpoint_url = "https://zenodo.org/records/7939403/files/checkpoint_closeto_.4
 
 default_labels_path = os.path.join(os.path.dirname(__file__), "config", "audioset_labels.csv")
 default_top_k = 10
-default_checkpoint_path = os.path.join(os.path.dirname(__file__), "models", "checkpoint_closeto_.44.pt")
+cache_dir = user_cache_dir('epanns')
+default_checkpoint_path = os.path.join(cache_dir, "checkpoint_closeto_.44.pt")
 
 def download_checkpoint():
   try:
+    os.makedirs(os.path.dirname(default_checkpoint_path), exist_ok=True)
     response = requests.get(checkpoint_url, stream=True)
     response.raise_for_status()
     with open(default_checkpoint_path, 'wb') as file:
