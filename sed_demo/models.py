@@ -25,7 +25,6 @@ from collections import OrderedDict
 from torch.utils.data import Dataset
 # from torchvision import datasets
 #from torchvision.transforms import ToTensor
-from torchsummary import summary
 import os
 import numpy as np
 
@@ -338,7 +337,7 @@ class Cnn14_pruned(nn.Module):
         embedding = F.dropout(x, p=0.5, training=self.training)
         # clipwise_output = torch.sigmoid(self.fc_audioset(x))
         # clipwise_output = torch.log_softmax(self.fc_audioset(x))
-        clipwise_output = nn.functional.softmax(self.fc_audioset(x))
+        clipwise_output = nn.functional.softmax(self.fc_audioset(x), dim=1)
 
         # output_dict = {'clipwise_output': clipwise_output, 'embedding': embedding}
 

@@ -4,51 +4,22 @@
 
 """
 """
-
-
 import os
 from dataclasses import dataclass
 from typing import Optional
-#
-from omegaconf import OmegaConf
-
-
-import matplotlib.pyplot as plt
-
 from sed_demo.utils import load_csv_labels
 from sed_demo.models import Cnn9_GMP_64x64, Cnn14_pruned
 from sed_demo.audio_loop import AsynchAudioInputStream
 from sed_demo.inference import AudioModelInference, PredictionTracker
-from sed_demo.gui import DemoFrontend
 import torch
-from torchsummary import summary
-
-from sed_demo import AI4S_BANNER_PATH, SURREY_LOGO_PATH, CVSSP_LOGO_PATH, \
-    EPSRC_LOGO_PATH
 
 from threading import Thread
 
-
-from tkinter import ttk
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torchlibrosa.stft import Spectrogram, LogmelFilterBank
-from torchlibrosa.augmentation import SpecAugmentation
-from collections import OrderedDict
-# import os
-# os.chdir('/home/arshdeep/PANNs_code/audioset_tagging_cnn-master/pytorch')
-#from pytorch_utils import do_mixup, interpolate, pad_framewise_output
-# import torch, torchvision
-from torch.utils.data import Dataset
-# from torchvision import datasets
-#from torchvision.transforms import ToTensor
-from torchsummary import summary
 import os
 import numpy as np
 
 
-class DemoApp(DemoFrontend):
+class DemoApp():
     """
     This class extends the Tk frontend with the functionality to run the audio
     detection demo
@@ -59,15 +30,15 @@ class DemoApp(DemoFrontend):
     BAR_COLOR = "#ffcc99"
     def __init__(
             self,
-            top_banner_path, logo_paths,
             all_audioset_labels, tracked_labels=None,
             samplerate=32000, audio_chunk_length=1024, ringbuffer_length=40000,
             model_winsize=1024, stft_hopsize=512, stft_window="hann", n_mels=64,
             mel_fmin=50, mel_fmax=14000, top_k=5):
         """
         """
-        super().__init__(top_k, top_banner_path, logo_paths)
+        
         #
+        self.is_running = True
         self.audiostream = AsynchAudioInputStream(
             samplerate, audio_chunk_length, ringbuffer_length)
         # 2. DL model to predict tags from ring buffer
@@ -85,24 +56,30 @@ class DemoApp(DemoFrontend):
         self.top_k = top_k
         self.thread = None
         # handle when user closes window
-        self.protocol("WM_DELETE_WINDOW", self.exit_demo)
-        self.info()
-    def info(self):
-        self.model
-        summary(self.model,(64000,),device='cpu')
+        # self.protocol("WM_DELETE_WINDOW", self.exit_demo)
+        # self.info()
+    # def info(self):
+    #     self.model
+    #     summary(self.model,(64000,),device='cpu')
 
     def inference_loop(self):
         """
         """
-        while self.is_running():
+        while self.is_running:
             dl_inference = self.inference(self.audiostream.read())
             top_preds = self.tracker(dl_inference, self.top_k)
+            print(top_preds)
             #
-            for label, bar, (clsname, pval) in zip(
-                    self.sound_labels, self.confidence_bars, top_preds):
-                label["text"] = clsname
-                bar["value"] = pval
+            # for label, bar, (clsname, pval) in zip(
+            #         self.sound_labels, self.confidence_bars, top_preds):
+            #     label["text"] = clsname
+            #     bar["value"] = pval
 
+
+    def is_running(self):
+        """
+        """
+        return self.is_running
 
     def start(self):
         """
@@ -120,7 +97,7 @@ class DemoApp(DemoFrontend):
         """
         """
         print("Exiting...")
-        if self.is_running():
+        if self.is_running:
             self.toggle_start()
         self.audiostream.terminate()
         self.destroy()
@@ -153,16 +130,14 @@ _, _, audioset_labels = load_csv_labels(audioset_labels_path)
 _, _, domestic_labels = load_csv_labels(domestic_labels_path)
 
 
-logo_paths=[SURREY_LOGO_PATH, CVSSP_LOGO_PATH, EPSRC_LOGO_PATH]
 
 
-
-demo = DemoApp(AI4S_BANNER_PATH, logo_paths, audioset_labels, domestic_labels,
+demo = DemoApp(audioset_labels, domestic_labels,
                samplerate, audio_chunk_length, ringbuffer_length,
                model_winsize, stft_hopsize, stft_window, n_mels,
                mel_fmin, mel_fmax, top_k)
 
-demo.mainloop()
+demo.inference_loop()
 
 
 # breakpoint()
