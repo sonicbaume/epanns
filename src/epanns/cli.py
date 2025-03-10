@@ -1,9 +1,9 @@
 import typer
 
-from .predict import predict
+from .predict import run
 
 app = typer.Typer()
-app.command()(predict)
+app.command()(run)
 
 if __name__ == "__main__":
     app()

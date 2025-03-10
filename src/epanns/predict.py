@@ -61,10 +61,10 @@ def check_top_k(value: int):
     return value
 
 def predict(
-    audio_path: Annotated[str, Argument(help="Path to the audio file", callback=check_path)] = "",
-    top_k: Annotated[int, Option(help="Number of classes to return", callback=check_top_k)] = default_top_k,
-    checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
-    audioset_labels_path: Annotated[str, Option(help="Path of labels", callback=check_path)] = default_labels_path
+  audio_path: str = "",
+  top_k: int = default_top_k,
+  checkpoint_path: str = default_checkpoint_path,
+  audioset_labels_path: str = default_labels_path
 ):
   if checkpoint_path == default_checkpoint_path and not os.path.isfile(checkpoint_path):
     print(f"Downloading model to {default_checkpoint_path}", file=sys.stderr)
@@ -96,4 +96,13 @@ def predict(
   tracker = PredictionTracker(audioset_labels)
   dl_inference = inference(audio, device)
   top_preds = tracker(dl_inference, top_k)
+  return top_preds
+
+def run(
+  audio_path: Annotated[str, Argument(help="Path to the audio file", callback=check_path)] = "",
+  top_k: Annotated[int, Option(help="Number of classes to return", callback=check_top_k)] = default_top_k,
+  checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
+  audioset_labels_path: Annotated[str, Option(help="Path of labels", callback=check_path)] = default_labels_path
+):
+  top_preds = predict(audio_path, top_k, checkpoint_path, audioset_labels_path)
   print(json.dumps(top_preds, indent=2))

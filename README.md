@@ -1,14 +1,15 @@
 # epanns
 
-`epanns` is a command-line tool for categorising sound within an audio file. It is uses the [E-PANNs](https://github.com/Arshdeep-Singh-Boparai/E-PANNs) lightweight pre-trained model developed by Arshdeep Singh at the University of Surrey. Sounds are categorised using the [Google AudioSet ontology](https://research.google.com/audioset/ontology/index.html).
+`epanns` is a tool for categorising sound within an audio file. It is uses the [E-PANNs](https://github.com/Arshdeep-Singh-Boparai/E-PANNs) lightweight pre-trained model developed by Arshdeep Singh at the University of Surrey. Sounds are categorised using the [Google AudioSet ontology](https://research.google.com/audioset/ontology/index.html).
 
-## Installation
-Use [pipx](https://pipx.pypa.io/stable/) to install:
+## Command-line usage
+
+Use [pipx](https://pipx.pypa.io/stable/) to install it as a CLI tool
 ```
 pipx install epanns
 ```
 
-## Usage
+Running the following
 ```
 epanns /path/to/audio.wav
 ```
@@ -34,6 +35,27 @@ To see the available options, run `epanns --help`
 
 If you do not provide a checkpoint path, the [model checkpoint](https://zenodo.org/records/7939403) will be downloaded on the first run and cached for future runs.
 
+## Library usage
+
+Use [pip](https://pip.pypa.io/en/stable/) to install
+```
+pip install epanns
+```
+
+Calling it as a library
+```
+from epanns.predict import predict
+top_preds = predict('/path/to/audio.wav')
+print(top_preds)
+```
+will return a list of tuples for the top predictions
+```
+[
+  ('Speech', 0.7508),
+  ('Inside, small room', 0.0186),
+  ('Computer keyboard', 0.0145)
+]
+```
 
 ## Acknowledgements
 
