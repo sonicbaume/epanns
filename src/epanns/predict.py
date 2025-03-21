@@ -53,7 +53,7 @@ def save_prediction(pred: str, output_dir: str, file: str):
       json.dump(pred, file_out)
 
 def check_path(value: str):
-  if not os.path.isfile(value) or not os.path.isdir(value):
+  if not os.path.isfile(value) and not os.path.isdir(value):
     raise BadParameter("Path does not exist")
   return value
 
