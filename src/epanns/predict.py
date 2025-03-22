@@ -57,6 +57,11 @@ def check_path(value: str):
     raise BadParameter("Path does not exist")
   return value
 
+def check_outdir_path(value: str):
+  if value != "":
+    return check_path(value)
+  return value
+
 def check_checkpoint_path(value: str):
   if value != default_checkpoint_path and not os.path.isfile(value):
     raise BadParameter("File does not exist")
@@ -110,7 +115,7 @@ def run(
   top_k: Annotated[int, Option(help="Number of classes to return", callback=check_top_k)] = default_top_k,
   checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
   audioset_labels_path: Annotated[str, Option(help="Path of labels", callback=check_path)] = default_labels_path,
-  output_dir: Annotated[str, Option(help="Directory to output the predictions", callback=check_path)] = ""
+  output_dir: Annotated[str, Option(help="Directory to output the predictions", callback=check_outdir_path)] = ""
 ):
   if os.path.isdir(audio_path):
     top_preds = []
