@@ -15,6 +15,7 @@ from librosa.core import load as loadAudio
 from typer import Argument, Option, BadParameter
 from typing_extensions import Annotated
 from platformdirs import user_cache_dir
+from pathlib import Path
 
 samplerate = 32000
 model_winsize = 1024
@@ -45,20 +46,27 @@ def download_checkpoint():
   except IOError as e:
       sys.exit(f"Error writing file {default_checkpoint_path}")
 
+def save_prediction(pred: any, output_dir: str, file: str):
+  file_name = Path(file).stem
+  os.makedirs(output_dir, exist_ok=True)
+  file_path = os.path.join(output_dir, f'{file_name}.json')
+  with open(file_path, 'w') as file_out:
+    json.dump(pred, file_out)
+
 def check_path(value: str):
-    if not os.path.isfile(value):
-      raise BadParameter("File does not exist")
-    return value
+  if not os.path.isfile(value) and not os.path.isdir(value):
+    raise BadParameter("Path does not exist")
+  return value
 
 def check_checkpoint_path(value: str):
-    if value != default_checkpoint_path and not os.path.isfile(value):
-      raise BadParameter("File does not exist")
-    return value
+  if value != default_checkpoint_path and not os.path.isfile(value):
+    raise BadParameter("File does not exist")
+  return value
 
 def check_top_k(value: int):
-    if value < 1:
-        raise BadParameter("Top K must be 1 or greater")
-    return value
+  if value < 1:
+      raise BadParameter("Top K must be 1 or greater")
+  return value
 
 def predict(
   audio_path: str = "",
@@ -99,10 +107,25 @@ def predict(
   return top_preds
 
 def run(
-  audio_path: Annotated[str, Argument(help="Path to the audio file", callback=check_path)] = "",
+  audio_path: Annotated[Path, Argument(help="Path to the audio file or directory", callback=check_path)] = "",
   top_k: Annotated[int, Option(help="Number of classes to return", callback=check_top_k)] = default_top_k,
-  checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
-  audioset_labels_path: Annotated[str, Option(help="Path of labels", callback=check_path)] = default_labels_path
+  checkpoint_path: Annotated[Path, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
+  audioset_labels_path: Annotated[Path, Option(help="Path of labels", callback=check_path)] = default_labels_path,
+  output_dir: Annotated[Path, Option(help="Directory to output the predictions")] = ""
 ):
-  top_preds = predict(audio_path, top_k, checkpoint_path, audioset_labels_path)
+  audio_path = audio_path.resolve()
+  output_dir = output_dir.resolve()
+  if os.path.isdir(audio_path):
+    top_preds = []
+    for file in os.listdir(audio_path):
+      file_path = os.path.join(audio_path, file)
+      pred = predict(file_path, top_k, checkpoint_path, audioset_labels_path)
+      top_preds.append(pred)
+      if output_dir != "": 
+        save_prediction(pred, output_dir, file)
+  else: 
+    top_preds = predict(audio_path, top_k, checkpoint_path, audioset_labels_path)
+    if output_dir != "": 
+      save_prediction(top_preds, output_dir, audio_path)
+  
   print(json.dumps(top_preds, indent=2))
