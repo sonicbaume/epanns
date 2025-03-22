@@ -15,6 +15,7 @@ from librosa.core import load as loadAudio
 from typer import Argument, Option, BadParameter
 from typing_extensions import Annotated
 from platformdirs import user_cache_dir
+from pathlib import Path
 
 samplerate = 32000
 model_winsize = 1024
@@ -45,21 +46,16 @@ def download_checkpoint():
   except IOError as e:
       sys.exit(f"Error writing file {default_checkpoint_path}")
 
-def save_prediction(pred: str, output_dir: str, file: str):
-    file_name = file.split('.')[0]
-    os.makedirs(output_dir, exist_ok=True)
-    file_path = os.path.join(output_dir, f'{file_name}.json')
-    with open(file_path, 'w') as file_out:
-      json.dump(pred, file_out)
+def save_prediction(pred: any, output_dir: str, file: str):
+  file_name = Path(file).stem
+  os.makedirs(output_dir, exist_ok=True)
+  file_path = os.path.join(output_dir, f'{file_name}.json')
+  with open(file_path, 'w') as file_out:
+    json.dump(pred, file_out)
 
 def check_path(value: str):
   if not os.path.isfile(value) and not os.path.isdir(value):
     raise BadParameter("Path does not exist")
-  return value
-
-def check_outdir_path(value: str):
-  if value != "":
-    return check_path(value)
   return value
 
 def check_checkpoint_path(value: str):
@@ -115,7 +111,7 @@ def run(
   top_k: Annotated[int, Option(help="Number of classes to return", callback=check_top_k)] = default_top_k,
   checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
   audioset_labels_path: Annotated[str, Option(help="Path of labels", callback=check_path)] = default_labels_path,
-  output_dir: Annotated[str, Option(help="Directory to output the predictions", callback=check_outdir_path)] = ""
+  output_dir: Annotated[str, Option(help="Directory to output the predictions")] = ""
 ):
   if os.path.isdir(audio_path):
     top_preds = []
@@ -124,8 +120,10 @@ def run(
       pred = predict(file_path, top_k, checkpoint_path, audioset_labels_path)
       top_preds.append(pred)
       if output_dir != "": 
-        save_prediction(str(pred), output_dir, file)
+        save_prediction(pred, output_dir, file)
   else: 
     top_preds = predict(audio_path, top_k, checkpoint_path, audioset_labels_path)
+    if output_dir != "": 
+      save_prediction(top_preds, output_dir, audio_path)
   
   print(json.dumps(top_preds, indent=2))
