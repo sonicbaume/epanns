@@ -107,12 +107,14 @@ def predict(
   return top_preds
 
 def run(
-  audio_path: Annotated[str, Argument(help="Path to the audio file", callback=check_path)] = "",
+  audio_path: Annotated[Path, Argument(help="Path to the audio file or directory", callback=check_path)] = "",
   top_k: Annotated[int, Option(help="Number of classes to return", callback=check_top_k)] = default_top_k,
-  checkpoint_path: Annotated[str, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
-  audioset_labels_path: Annotated[str, Option(help="Path of labels", callback=check_path)] = default_labels_path,
-  output_dir: Annotated[str, Option(help="Directory to output the predictions")] = ""
+  checkpoint_path: Annotated[Path, Option(help="Path of checkpoint", callback=check_checkpoint_path)] = default_checkpoint_path,
+  audioset_labels_path: Annotated[Path, Option(help="Path of labels", callback=check_path)] = default_labels_path,
+  output_dir: Annotated[Path, Option(help="Directory to output the predictions")] = ""
 ):
+  audio_path = audio_path.resolve()
+  output_dir = output_dir.resolve()
   if os.path.isdir(audio_path):
     top_preds = []
     for file in os.listdir(audio_path):
