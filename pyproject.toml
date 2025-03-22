@@ -8,12 +8,13 @@ version = "0.1.5"
 requires-python = ">= 3.9"
 dependencies = [
   "numpy<2",
-  "librosa<0.8",
+  "librosa>=0.8",
   "torch<2",
-  "torchlibrosa<0.0.5",
+  "torchlibrosa",
   "typer",
   "platformdirs",
-  "requests",
+  "matplotlib",
+  "requests"
 ]
 license = "MIT"
 readme = "README.md"
